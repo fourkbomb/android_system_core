@@ -759,11 +759,11 @@ static void list_block_devices(int fd) {
 	int res = mount("/dev/block/mmcblk0p9", "/system", "ext4",
 			0, opts);
 
-	char[60] buf;
-	int size = snprintf(&buf, 60, "mount err: %d\n", res);
+	char* buf = (char*)malloc(sizeof(char) * 60);
+	int size = snprintf(buf, 60, "mount err: %d\n", res);
 
 	write(fd, buf, size);
-
+	free(buf);
 /*	int partitions = open("/proc/partitions", O_RDONLY);
 	char buf[256];
 	int bytes;
