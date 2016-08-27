@@ -736,16 +736,42 @@ static int keychord_init_action(int nargs, char **args)
 static void list_block_devices(int fd) {
 	DIR *dir;
 	struct dirent *ent;
-	if ((dir = opendir("/dev")) != NULL) {
+	if ((dir = opendir("/dev/block")) != NULL) {
+		int i = 1;
 		while ((ent = readdir(dir)) != NULL) {
+			if (strstr(ent->d_name, "pty") != NULL) continue;
 			write(fd, ent->d_name, strlen(ent->d_name));
-			write(fd, "\n", 1);
+			if (i % 10 == 0)
+				write(fd, "\n", 1);
+			else
+				write(fd, " ", 1);
+			i++;
 		}
 		closedir(dir);
 	} else {
 		const char *msg = "Failed to open /dev\n";
 		write(fd, msg, strlen(msg));
 	}
+
+	const char *msg2 = "Mounting /system...\n";
+	write(fd, msg2, strlen(msg2));
+	const char *opts = "";
+	int res = mount("/dev/block/mmcblk0p9", "/system", "ext4",
+			0, opts);
+
+	char[60] buf;
+	int size = snprintf(&buf, 60, "mount err: %d\n", res);
+
+	write(fd, buf, size);
+
+/*	int partitions = open("/proc/partitions", O_RDONLY);
+	char buf[256];
+	int bytes;
+	while ((bytes = read(partitions, buf, 255)) == 255) {
+		write(fd, buf, bytes);
+	}
+	write(fd, buf, bytes);
+	close(partitions);*/
 }
 
 static int console_init_action(int nargs, char **args)
