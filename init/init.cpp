@@ -733,6 +733,21 @@ static int keychord_init_action(int nargs, char **args)
     return 0;
 }
 
+static void list_block_devices(int fd) {
+	DIR *dir;
+	struct dirent *ent;
+	if ((dir = opendir("/dev")) != NULL) {
+		while ((ent = readdir(dir)) != NULL) {
+			write(fd, ent->d_name, strlen(ent->d_name));
+			write(fd, "\n", 1);
+		}
+		closedir(dir);
+	} else {
+		const char *msg = "Failed to open /dev\n";
+		write(fd, msg, strlen(msg));
+	}
+}
+
 static int console_init_action(int nargs, char **args)
 {
     char console[PROP_VALUE_MAX];
@@ -764,6 +779,7 @@ static int console_init_action(int nargs, char **args)
         "\n"
         "             A N D R O I D ";
         write(fd, msg, strlen(msg));
+		list_block_devices(fd);
         close(fd);
     }
 
